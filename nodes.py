@@ -263,6 +263,16 @@ class MessageNode(Node):
 
         self.custom_fields_dict = data["custom_fields_dict"]
 
+    def has_cache(self):
+        connected = False
+        for input in self.inputs:
+            if input.label_str == "retrieve_cache" and len(input.connections) > 0:
+                connected = True
+        for output in self.outputs:
+            if output.label_str == "create_cache" and len(output.connections) > 0:
+                connected = True
+        return connected
+
 
 class CacheWidget(CustomWidgetBase):
     def __init__(self, params):

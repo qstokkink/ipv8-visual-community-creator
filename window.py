@@ -13,6 +13,7 @@ from ryvencore.NodePort import NodePort
 from ryvencore_qt.src.flows.connections.ConnectionItem import ConnectionItem
 from shiboken2 import shiboken2
 
+from exporter import Exporter
 from nodes import nodes
 
 
@@ -105,10 +106,11 @@ class IPv8VisualProgrammer(MainWindow):
         """
         Overwritten -> now "Export" action.
         """
-        # TODO: Dialog to select empty folder
-        # TODO: Export rules per node type
-        for node in self.session.all_node_objects():
-            print("EXPORT NODE:", node)
+        # Dialog to select save file
+        file_path = QFileDialog.getSaveFileName(self, 'select file name', '', 'PY(*.py)')[0]
+        if file_path != '':
+            exporter = Exporter(self.session.all_node_objects())
+            exporter.export(file_path)
 
     def script_created(self, script, flow_view):
         super().script_created(script, flow_view)
