@@ -21,11 +21,11 @@ def produce_imports_block(has_cache: bool, has_random_selector: bool) -> str:
         out += "from random import sample" + LINE_BREAK
     out += LINE_BREAK + "from ipv8.community import Community" + LINE_BREAK
     if has_cache:
-        out += ("from ipv8.lazy_community import lazy_wrapper" + LINE_BREAK
+        out += ("from ipv8.lazy_community import lazy_wrapper, retrieve_cache" + LINE_BREAK
                 + "from ipv8.messaging.payload_dataclass import overwrite_dataclass, type_from_format" + LINE_BREAK
                 + "from ipv8.requestcache import RandomNumberCache, RequestCache" + LINE_BREAK)
     else:
-        out += ("from ipv8.lazy_community import lazy_wrapper, retrieve_cache" + LINE_BREAK
+        out += ("from ipv8.lazy_community import lazy_wrapper" + LINE_BREAK
                 + "from ipv8.messaging.payload_dataclass import overwrite_dataclass" + LINE_BREAK)
     out += "from ipv8.types import AnyPayload, AnyPayloadType, Endpoint, Network, Peer" + LINE_BREAK
     out += LINE_BREAK + "dataclass = overwrite_dataclass(dataclass)" + LINE_BREAK
