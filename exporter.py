@@ -1,4 +1,6 @@
 from functools import lru_cache, reduce
+from hashlib import sha1
+from json import dumps
 from typing import Dict, List, Tuple, Optional
 
 from nodes import AllPeersNode, RandomPeerNode, CacheNode, MessageNode, PeriodicTaskNode
@@ -17,7 +19,6 @@ def produce_imports_block(has_cache: bool, has_random_selector: bool) -> str:
     out = "from dataclasses import dataclass" + LINE_BREAK
     if has_random_selector:
         out += "from random import sample" + LINE_BREAK
-    out += "from typing import Optional" + LINE_BREAK
     out += LINE_BREAK + "from ipv8.community import Community" + LINE_BREAK
     if has_cache:
         out += ("from ipv8.lazy_community import lazy_wrapper" + LINE_BREAK
@@ -83,13 +84,6 @@ def produce_init_block(message_classes: List[str], tasks: List[Tuple[int, float]
     return out
 
 
-def produce_message_producer_block() -> str:
-    return (f"{INDENT}def produce_initial_message(peer: Peer, message_class: AnyPayloadType) "
-            f"-> Optional[AnyPayload]:{LINE_BREAK}"
-            f"{INDENT * 2}raise NotImplementedError(\"Fill this function with your message producing logic\")"
-            f"{LINE_BREAK}")
-
-
 def produce_selector_block(selector_id: int, linked_message_classes: List[str],
                            all_peers: Optional[bool] = False) -> str:
     out = f"{INDENT}def selector_{selector_id}(self):" + LINE_BREAK
@@ -105,10 +99,8 @@ def produce_selector_block(selector_id: int, linked_message_classes: List[str],
                 + INDENT * 3 + f"{peers_inst_name} = sample(known_peers, 1)" + LINE_BREAK)
     for linked_message_class in linked_message_classes:
         out += LINE_BREAK
-        out += INDENT * 3 + (f"message = self.produce_initial_message({peers_inst_name}, {linked_message_class})"
-                             + LINE_BREAK)
-        out += (INDENT * 3 + "if message is not None:" + LINE_BREAK
-                + INDENT * 4 + f"self.ez_send({peers_inst_name}, message)" + LINE_BREAK)
+        out += (INDENT * 3 + f"self.ez_send({peers_inst_name}, {linked_message_class}(NotImplementedError("
+                + "\"Fill your message fields here\")))" + LINE_BREAK)
     return out
 
 
@@ -171,18 +163,19 @@ class Exporter:
         code_import_block = produce_imports_block(has_caches, has_random_selector)
         code_message_blocks = []
         known_message_classes = []
+        message_signature = sha1()
         for i, message_node in enumerate(self.message_nodes):
+            message_signature.update(f"{i}{dumps(message_node.custom_fields_dict)}".encode())
             known_message_classes.append(message_node.display_title)
             code_message_blocks.append(produce_message_block(i, message_node.display_title,
                                                              message_node.custom_fields_dict, message_node.has_cache()))
         code_cache_blocks = []
         for cache_node in self.cache_nodes:
             code_cache_blocks.append(produce_cache_block(cache_node.display_title, cache_node.custom_fields_dict))
-        code_community_block = produce_community_block("\\x00" * 20)  # TODO: base on defined messages
+        code_community_block = produce_community_block(repr(message_signature.digest())[2:-1])
         code_init_block = produce_init_block(known_message_classes,
                                              [(i, node.interval) for i, node in enumerate(self.task_nodes)],
                                              has_caches)
-        code_message_producer_block = produce_message_producer_block()
         code_message_selector_blocks = []
         for i, task_node in enumerate(self.task_nodes):
             selector_port = [port for port in task_node.outputs if port.label_str == "on_timer_fire"]
@@ -215,12 +208,13 @@ class Exporter:
             code_message_handler_blocks.append(produce_message_handler_block(message_node.display_title, input_cache,
                                                                              output_cache, response_message))
 
-        out = code_import_block + LINE_BREAK + LINE_BREAK
-        out += LINE_BREAK.join(code_message_blocks) + LINE_BREAK
-        out += LINE_BREAK.join(code_cache_blocks) + LINE_BREAK
+        out = code_import_block + LINE_BREAK * 2
+        if len(code_message_blocks):
+            out += (LINE_BREAK * 2).join(code_message_blocks) + LINE_BREAK * 2
+        if len(code_cache_blocks):
+            out += (LINE_BREAK * 2).join(code_cache_blocks) + LINE_BREAK * 2
         out += code_community_block + LINE_BREAK
         out += code_init_block + LINE_BREAK
-        out += code_message_producer_block + LINE_BREAK  # TODO: This is a bit clunky, just call the Message constructor!
         out += LINE_BREAK.join(code_message_selector_blocks) + LINE_BREAK
         out += LINE_BREAK.join(code_message_handler_blocks)
 
