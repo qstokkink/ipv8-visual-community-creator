@@ -9,6 +9,7 @@ from ryven.gui.main_console import init_main_console, MainConsole
 from ryven.gui.main_window import MainWindow
 from ryven.gui.styling.window_theme import apply_stylesheet
 from ryven.main.utils import abs_path_from_package_dir
+from ryvencore.NodePort import NodePort
 from ryvencore_qt.src.flows.connections.ConnectionItem import ConnectionItem
 from shiboken2 import shiboken2
 
@@ -37,7 +38,7 @@ class IPv8VisualProgrammer(MainWindow):
         super().setup_menu_actions()
 
         self.ui.actionImport_Nodes.setText("Load Project")
-        self.ui.actionImport_Example_Nodes.deleteLater()
+        self.ui.actionImport_Example_Nodes.setText("Export as IPv8 Code")
         self.ui.menuDebugging.deleteLater()
         self.ui.menuScripts.deleteLater()
         self.ui.scripts_groupBox.deleteLater()
@@ -47,11 +48,13 @@ class IPv8VisualProgrammer(MainWindow):
     def remove_workspace_garbage(self):
         for workspace_pane in list(self.script_UIs.values()):
             if shiboken2.isValid(workspace_pane.ui.contents_widget):
+                # Removals
                 workspace_pane.ui.contents_widget.deleteLater()
                 workspace_pane.ui.source_code_groupBox.deleteLater()
                 workspace_pane.flow_view._stylus_modes_widget.deleteLater()
                 workspace_pane.flow_view.set_stylus_proxy_pos = lambda: None
 
+                # Overwrites
                 @wraps(workspace_pane.flow_view._add_connection_item)
                 def connection_item_added_overwrite(item: ConnectionItem):
                     nonlocal workspace_pane
@@ -66,13 +69,46 @@ class IPv8VisualProgrammer(MainWindow):
 
                 workspace_pane.flow_view._add_connection_item = connection_item_added_overwrite
 
+                @wraps(workspace_pane.flow_view.flow.check_connection_validity)
+                def check_connection_validity_overwrite(p1: NodePort, p2: NodePort):
+                    nonlocal workspace_pane
+                    valid = True
+
+                    # Custom checks
+                    p1_is_single = p1.label_str in getattr(p1.node, "singleton_ports", [])
+                    p2_is_single = p2.label_str in getattr(p2.node, "singleton_ports", [])
+                    if p1_is_single and len(p1.connections) > 0:
+                        valid = False
+                    if p2_is_single and len(p2.connections) > 0:
+                        valid = False
+
+                    if valid:
+                        return check_connection_validity_overwrite.__wrapped__(p1, p2)
+                    else:
+                        return False
+
+
+                workspace_pane.flow_view.flow.check_connection_validity = check_connection_validity_overwrite
+
     def on_import_nodes_triggered(self):
+        """
+        Overwritten -> now "Load Project" action.
+        """
         file_path = QFileDialog.getOpenFileName(self, 'select nodes file', '.', '(*.json)', )[0]
         if file_path != '':
             self.ui.scripts_tab_widget.removeTab(0)
             import json
             with open(file_path, 'r') as fp:
                 self.session.load(json.load(fp))
+
+    def on_import_example_nodes_triggered(self):
+        """
+        Overwritten -> now "Export" action.
+        """
+        # TODO: Dialog to select empty folder
+        # TODO: Export rules per node type
+        for node in self.session.all_node_objects():
+            print("EXPORT NODE:", node)
 
     def script_created(self, script, flow_view):
         super().script_created(script, flow_view)

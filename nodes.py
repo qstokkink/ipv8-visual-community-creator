@@ -226,6 +226,12 @@ class MessageNode(Node):
         NodeOutputBP("response", type_="peer"),
         NodeOutputBP("create_cache", type_="message")
     ]
+    singleton_ports = [
+        "received_by",
+        "retrieve_cache",
+        "response",
+        "create_cache"
+    ]
     color = '#A9D5EF'
     __class_codes__ = None
     main_widget_class = MessageWidget
@@ -289,6 +295,10 @@ class CacheNode(Node):
     init_outputs = [
         NodeOutputBP("received_by", type_="cache")
     ]
+    singleton_ports = [
+        "belongs_to",
+        "received_by"
+    ]
     color = '#448aff'
     __class_codes__ = None
     main_widget_class = CacheWidget
@@ -329,6 +339,8 @@ class AllPeersNode(Node):
     init_outputs = [
         NodeOutputBP("message", type_="peer")
     ]
+    singleton_ports = [
+    ]
     color = '#8aff44'
     __class_codes__ = None
 
@@ -347,6 +359,8 @@ class RandomPeerNode(Node):
     ]
     init_outputs = [
         NodeOutputBP("message", type_="peer")
+    ]
+    singleton_ports = [
     ]
     color = '#8aff44'
     __class_codes__ = None
