@@ -67,9 +67,9 @@ class IPv8VisualProgrammer(MainWindow):
                 workspace_pane.flow_view._add_connection_item = connection_item_added_overwrite
 
     def on_import_nodes_triggered(self):
-        self.ui.scripts_tab_widget.removeTab(0)
         file_path = QFileDialog.getOpenFileName(self, 'select nodes file', '.', '(*.json)', )[0]
         if file_path != '':
+            self.ui.scripts_tab_widget.removeTab(0)
             import json
             with open(file_path, 'r') as fp:
                 self.session.load(json.load(fp))

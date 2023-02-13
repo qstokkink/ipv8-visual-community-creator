@@ -89,7 +89,7 @@ class FieldNameValidator(QValidator, LogInParentMixIn):
 
 class DataTypeRowWidget(QWidget):
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, field_name=None, field_type=None):
         super().__init__(parent=parent)
 
         self.setAttribute(Qt.WA_TranslucentBackground, True)
@@ -107,6 +107,11 @@ class DataTypeRowWidget(QWidget):
         self.type_edit.addItem("object")
         self.type_edit.setMinimumContentsLength(7)
 
+        if field_name is not None:
+            self.line_edit.setText(field_name)
+        if field_type is not None:
+            self.type_edit.setCurrentIndex(self.type_edit.findText(field_type))
+
         self.layout().addWidget(self.line_edit)
         self.layout().addWidget(self.type_edit)
 
@@ -114,10 +119,30 @@ class DataTypeRowWidget(QWidget):
         self.line_edit.show()
         self.type_edit.show()
 
+        self.last_field_value = ""
+        self.last_type_value = "str"
+
+        self.line_edit.editingFinished.connect(self.field_updated)
+        self.type_edit.currentIndexChanged.connect(self.field_updated)
+
+    def field_updated(self):
+        node = self.parent().parent().node
+        field_dict: dict = node.custom_fields_dict
+        # 1. Remove previous entry from node, if it exists
+        if self.last_field_value in field_dict:
+            field_dict.pop(self.last_field_value)
+        # 2. Add new entry
+        new_field_value = self.line_edit.text()
+        new_type_value = self.type_edit.itemText(self.type_edit.currentIndex())
+        field_dict[new_field_value] = new_type_value
+        # 3. Update new last values
+        self.last_field_value = new_field_value
+        self.last_type_value = new_type_value
+
 
 class DataTypeTableWidget(QWidget):
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, field_items=[]):
         super().__init__(parent=parent)
 
         self.setAttribute(Qt.WA_TranslucentBackground, True)
@@ -137,13 +162,18 @@ class DataTypeTableWidget(QWidget):
         self.remove_button.hide()
         self.expansion_pane.layout().addWidget(self.add_button)
         self.expansion_pane.layout().addWidget(self.remove_button)
+
+        for item in field_items:
+            field_name, field_type = item
+            self.add_row(field_name, field_type)
+
         self.layout().addWidget(self.expansion_pane)
 
     def refresh(self):
         self.parent().node_item.update_shape()
 
-    def add_row(self):
-        line_pane = DataTypeRowWidget(parent=self)
+    def add_row(self, field_name=None, field_type=None):
+        line_pane = DataTypeRowWidget(parent=self, field_name=field_name, field_type=field_type)
         if self.rows:
             self.layout().insertWidget(len(self.rows), line_pane)
         else:
@@ -173,7 +203,17 @@ class MessageWidget(CustomWidgetBase):
         self.setAttribute(Qt.WA_NoSystemBackground, True)
 
         self.setLayout(QVBoxLayout())
-        self.layout().addWidget(DataTypeTableWidget(parent=self))
+        self.fields_table = DataTypeTableWidget(parent=self)
+        self.layout().addWidget(self.fields_table)
+
+    def get_state(self):
+        return self.node.custom_fields_dict
+
+    def set_state(self, state):
+        self.node.custom_fields_dict = state
+        for item in state.items():
+            field_name, field_type = item
+            self.fields_table.add_row(field_name, field_type)
 
 
 class MessageNode(Node):
@@ -197,6 +237,8 @@ class MessageNode(Node):
         self.set_display_title(f"{MessageNode.title}{MessageNode.unique_message_num}")
         MessageNode.unique_message_num += 1
 
+        self.custom_fields_dict = {}
+
     def init_default_actions(self) -> dict:
         actions = {
             'update shape': {'method': self.update_shape},
@@ -204,6 +246,16 @@ class MessageNode(Node):
             'change Message name': {'method': self.change_title}
         }
         return actions
+
+    def additional_data(self) -> dict:
+        out = super().additional_data()
+        out["custom_fields_dict"] = self.custom_fields_dict
+        return out
+
+    def load_additional_data(self, data):
+        super().load_additional_data(data)
+
+        self.custom_fields_dict = data["custom_fields_dict"]
 
 
 class CacheWidget(CustomWidgetBase):
@@ -216,7 +268,17 @@ class CacheWidget(CustomWidgetBase):
         self.setAttribute(Qt.WA_NoSystemBackground, True)
 
         self.setLayout(QVBoxLayout())
-        self.layout().addWidget(DataTypeTableWidget(parent=self))
+        self.fields_table = DataTypeTableWidget(parent=self)
+        self.layout().addWidget(self.fields_table)
+
+    def get_state(self):
+        return self.node.custom_fields_dict
+
+    def set_state(self, state):
+        self.node.custom_fields_dict = state
+        for item in state.items():
+            field_name, field_type = item
+            self.fields_table.add_row(field_name, field_type)
 
 
 class CacheNode(Node):
@@ -238,6 +300,8 @@ class CacheNode(Node):
         self.set_display_title(f"{CacheNode.title}{CacheNode.unique_cache_num}")
         CacheNode.unique_cache_num += 1
 
+        self.custom_fields_dict = {}
+
     def init_default_actions(self) -> dict:
         actions = {
             'update shape': {'method': self.update_shape},
@@ -245,6 +309,16 @@ class CacheNode(Node):
             'change Cache name': {'method': self.change_title}
         }
         return actions
+
+    def additional_data(self) -> dict:
+        out = super().additional_data()
+        out["custom_fields_dict"] = self.custom_fields_dict
+        return out
+
+    def load_additional_data(self, data):
+        super().load_additional_data(data)
+
+        self.custom_fields_dict = data["custom_fields_dict"]
 
 
 class AllPeersNode(Node):
@@ -319,7 +393,7 @@ class PeriodicTaskWidget(CustomWidgetBase):
         return self.editor.text()
 
     def set_state(self, state):
-        return self.editor.setText(state)
+        self.editor.setText(state)
 
 
 class PeriodicTaskNode(Node):
