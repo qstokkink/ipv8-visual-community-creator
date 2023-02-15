@@ -2,7 +2,7 @@ from functools import reduce
 
 import PySide2
 from PySide2.QtCore import Signal, Qt
-from PySide2.QtGui import QDoubleValidator, QFont, QValidator
+from PySide2.QtGui import QDoubleValidator, QFont, QFontMetrics, QValidator
 from PySide2.QtWidgets import QWidget, QVBoxLayout, QLabel, QLineEdit, QComboBox, QHBoxLayout
 from ryven import init_node_env, export_nodes
 from ryven.NWENV import export_widgets, init_node_widget_env
@@ -101,6 +101,7 @@ class DataTypeRowWidget(QWidget):
         self.line_edit.setFont(QFont('source code pro', 10))
         self.line_edit.setValidator(FieldNameValidator(parent=self))
         self.line_edit.setPlaceholderText('field name')
+        self.line_edit.setMinimumWidth(QFontMetrics(QFont('source code pro', 10)).width("field name"))
 
         self.type_edit = QComboBox()
         self.type_edit.setFont(QFont('source code pro', 10))
@@ -118,7 +119,7 @@ class DataTypeRowWidget(QWidget):
         self.layout().addWidget(self.line_edit)
         self.layout().addWidget(self.type_edit)
 
-        self.setMinimumWidth(200)
+        self.setMinimumWidth(QFontMetrics(QFont('source code pro', 10)).width("field name" + " "*10 + "object"))
         self.line_edit.show()
         self.type_edit.show()
 
