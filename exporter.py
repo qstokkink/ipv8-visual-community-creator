@@ -202,8 +202,8 @@ class Exporter:
             input_caches = [port.connections for port in message_node.inputs if port.label_str == "retrieve_cache"][0]
             output_caches = [port.connections for port in message_node.outputs if port.label_str == "create_cache"][0]
             response_messages = [port.connections for port in message_node.outputs if port.label_str == "response"][0]
-            input_cache = input_caches[0].inp.nodedisplay_title if input_caches else None
-            output_cache = output_caches[0].inp.nodedisplay_title if output_caches else None
+            input_cache = input_caches[0].inp.node.display_title if input_caches else None
+            output_cache = output_caches[0].inp.node.display_title if output_caches else None
             response_message = response_messages[0].inp.node.display_title if response_messages else None
             code_message_handler_blocks.append(produce_message_handler_block(message_node.display_title, input_cache,
                                                                              output_cache, response_message))
