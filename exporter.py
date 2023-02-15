@@ -85,11 +85,13 @@ def produce_init_block(message_classes: List[str], tasks: List[Tuple[int, float]
 
 
 def produce_selector_block(selector_id: int, linked_message_classes: List[str],
-                           all_peers: Optional[bool] = False) -> str:
-    out = f"{INDENT}def selector_{selector_id}(self):" + LINE_BREAK
-    if all_peers is None:
-        out += INDENT * 2 + "pass" + LINE_BREAK
-        return out
+                           all_peers: Optional[bool] = False, header=True) -> str:
+    out = ""
+    if header:
+        out = f"{INDENT}def selector_{selector_id}(self):" + LINE_BREAK
+        if all_peers is None:
+            out += INDENT * 2 + "pass" + LINE_BREAK
+            return out
     peers_inst_name = "peer" if all_peers else "random_peer"
     if all_peers:
         out += INDENT * 2 + "for peer in self.get_peers():" + (LINE_BREAK if len(linked_message_classes) == 0 else "")
@@ -183,9 +185,10 @@ class Exporter:
                 code_message_selector_blocks.append(produce_selector_block(i, [], None))
                 continue
             selectors = selector_port[0].connections
-            all_peers_links = []
-            random_peers_links = []
+            first = True
             for selector_connection in selectors:
+                all_peers_links = []
+                random_peers_links = []
                 selector = selector_connection.inp.node
                 links_to = [port.connections for port in selector.outputs if port.label_str == "message"][0]
                 links_to = [connection.inp.node.display_title for connection in links_to]
@@ -193,10 +196,12 @@ class Exporter:
                     all_peers_links.extend(links_to)
                 else:
                     random_peers_links.extend(links_to)
-            if all_peers_links:
-                code_message_selector_blocks.append(produce_selector_block(i, all_peers_links, True))
-            if random_peers_links:
-                code_message_selector_blocks.append(produce_selector_block(i, random_peers_links, False))
+                if all_peers_links:
+                    code_message_selector_blocks.append(produce_selector_block(i, all_peers_links, True, first))
+                    first = False
+                if random_peers_links:
+                    code_message_selector_blocks.append(produce_selector_block(i, random_peers_links, False, first))
+                    first = False
         code_message_handler_blocks = []
         for message_node in self.message_nodes:
             input_caches = [port.connections for port in message_node.inputs if port.label_str == "retrieve_cache"][0]
