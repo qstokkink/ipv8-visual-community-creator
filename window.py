@@ -2,7 +2,7 @@ import sys
 from functools import wraps
 
 from PySide2.QtWidgets import QFileDialog
-from qtpy.QtGui import QFontDatabase
+from qtpy.QtGui import QFont, QFontDatabase
 from qtpy.QtWidgets import QApplication
 from ryven import NodesPackage
 from ryven.gui.main_console import init_main_console, MainConsole
@@ -43,6 +43,9 @@ class IPv8VisualProgrammer(MainWindow):
         self.ui.menuDebugging.deleteLater()
         self.ui.menuScripts.deleteLater()
         self.ui.scripts_groupBox.deleteLater()
+
+        self.ui.scripts_tab_widget.tabBar().setFont(QFont('source code pro', 10))
+        self.nodes_list_widget.search_line_edit.setFont(QFont('source code pro', 10))
 
         self.session.create_script("workspace")
 
