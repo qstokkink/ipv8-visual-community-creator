@@ -27,7 +27,7 @@ def produce_imports_block(has_cache: bool, has_random_selector: bool) -> str:
     else:
         out += ("from ipv8.lazy_community import lazy_wrapper" + LINE_BREAK
                 + "from ipv8.messaging.payload_dataclass import overwrite_dataclass" + LINE_BREAK)
-    out += "from ipv8.types import AnyPayload, AnyPayloadType, Endpoint, Network, Peer" + LINE_BREAK
+    out += "from ipv8.types import Endpoint, Network, Peer" + LINE_BREAK
     out += LINE_BREAK + "dataclass = overwrite_dataclass(dataclass)" + LINE_BREAK
     if has_cache:
         out += "Identifier = type_from_format(\"I\")" + LINE_BREAK
