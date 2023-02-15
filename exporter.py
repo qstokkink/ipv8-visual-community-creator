@@ -50,7 +50,7 @@ def produce_cache_block(cache_class_name: str, fields: Dict[str, str]) -> str:
     out = (f"class {cache_class_name}(RandomNumberCache)" + LINE_BREAK
            + INDENT + f"name = \"{cache_class_name}\"" + LINE_BREAK + LINE_BREAK
            + INDENT + "def __init__(self, request_cache: RequestCache, "
-                    + ", ".join(f"{k}: {v}" for k, v in fields.items()) + ")" + LINE_BREAK
+                    + ", ".join(f"{k}: {v}" for k, v in fields.items()) + "):" + LINE_BREAK
            + INDENT * 2 + f"super().__init__(request_cache, {cache_class_name}.name)" + LINE_BREAK
            + LINE_BREAK if len(fields) > 0 else "")
     for k, v in fields.items():
