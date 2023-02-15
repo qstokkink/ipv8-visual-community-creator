@@ -47,7 +47,7 @@ def produce_message_block(message_number: int, message_class_name: str, fields: 
 
 
 def produce_cache_block(cache_class_name: str, fields: Dict[str, str]) -> str:
-    out = (f"class {cache_class_name}(RandomNumberCache)" + LINE_BREAK
+    out = (f"class {cache_class_name}(RandomNumberCache):" + LINE_BREAK
            + INDENT + f"name = \"{cache_class_name}\"" + LINE_BREAK + LINE_BREAK
            + INDENT + "def __init__(self, request_cache: RequestCache, "
                     + ", ".join(f"{k}: {v}" for k, v in fields.items()) + "):" + LINE_BREAK
