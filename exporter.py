@@ -37,9 +37,9 @@ def produce_imports_block(has_cache: bool, has_random_selector: bool) -> str:
 def produce_message_block(message_number: int, message_class_name: str, fields: Dict[str, str], has_cache=False) -> str:
     out = (f"@dataclass(msg_id={message_number})" + LINE_BREAK
            + f"class {message_class_name}:" + LINE_BREAK)
-    if len(fields) == 0:
+    if len(fields) == 0 and not has_cache:
         out += INDENT + "pass" + LINE_BREAK
-    else:
+    elif len(fields) > 0:
         out += INDENT + (LINE_BREAK + INDENT).join(f"{k}: {v}" for k, v in fields.items()) + LINE_BREAK
     if has_cache:
         out += INDENT + "identifier: Identifier" + LINE_BREAK
@@ -48,7 +48,7 @@ def produce_message_block(message_number: int, message_class_name: str, fields: 
 
 def produce_cache_block(cache_class_name: str, fields: Dict[str, str]) -> str:
     out = (f"class {cache_class_name}(RandomNumberCache)" + LINE_BREAK
-           + INDENT + f"name = {cache_class_name}" + LINE_BREAK + LINE_BREAK
+           + INDENT + f"name = \"{cache_class_name}\"" + LINE_BREAK + LINE_BREAK
            + INDENT + "def __init__(self, request_cache: RequestCache, "
                     + ", ".join(f"{k}: {v}" for k, v in fields.items()) + ")" + LINE_BREAK
            + INDENT * 2 + f"super().__init__(request_cache, {cache_class_name}.name)" + LINE_BREAK
