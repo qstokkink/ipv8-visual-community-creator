@@ -109,6 +109,15 @@ class IPv8VisualProgrammer(MainWindow):
             import json
             with open(file_path, 'r') as fp:
                 self.session.load(json.load(fp))
+            
+            for flow_view in self.session.flow_views.values():
+                flow_view.hide()
+                selected = flow_view.scene().selectedItems()
+                flow_view.select_all()
+                QApplication.instance().processEvents()
+                flow_view.clear_selection()
+                flow_view.select_components(selected)
+                flow_view.show()
 
     def on_import_example_nodes_triggered(self):
         """
