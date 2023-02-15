@@ -2,7 +2,7 @@ from functools import reduce
 
 import PySide2
 from PySide2.QtCore import Signal, Qt
-from PySide2.QtGui import QDoubleValidator, QValidator
+from PySide2.QtGui import QDoubleValidator, QFont, QValidator
 from PySide2.QtWidgets import QWidget, QVBoxLayout, QLabel, QLineEdit, QComboBox, QHBoxLayout
 from ryven import init_node_env, export_nodes
 from ryven.NWENV import export_widgets, init_node_widget_env
@@ -22,6 +22,7 @@ class QClickableLabel(QLabel):
         self.setAttribute(Qt.WA_NoSystemBackground, True)
 
         self.setAlignment(Qt.AlignHCenter)
+        self.setFont(QFont('source code pro', 10))
 
     def mousePressEvent(self, ev):
         self.clicked.emit()
@@ -97,10 +98,12 @@ class DataTypeRowWidget(QWidget):
         self.setLayout(QHBoxLayout())
 
         self.line_edit = QLineEdit()
+        self.line_edit.setFont(QFont('source code pro', 10))
         self.line_edit.setValidator(FieldNameValidator(parent=self))
         self.line_edit.setPlaceholderText('field name')
 
         self.type_edit = QComboBox()
+        self.type_edit.setFont(QFont('source code pro', 10))
         self.type_edit.addItem("str")
         self.type_edit.addItem("int")
         self.type_edit.addItem("float")
@@ -404,6 +407,7 @@ class PeriodicTaskWidget(CustomWidgetBase):
         self.setLayout(QVBoxLayout())
         validator = LoggingDoubleValidator(parent=self)
         line_edit = QLineEdit()
+        line_edit.setFont(QFont('source code pro', 10))
         line_edit.setValidator(validator)
         line_edit.setPlaceholderText('1.0')
         line_edit.editingFinished.connect(self.interval_updated)
