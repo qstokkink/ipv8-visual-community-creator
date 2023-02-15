@@ -97,7 +97,12 @@ class IPv8VisualProgrammer(MainWindow):
         """
         file_path = QFileDialog.getOpenFileName(self, 'select nodes file', '.', '(*.json)', )[0]
         if file_path != '':
-            self.ui.scripts_tab_widget.removeTab(0)
+            while self.ui.scripts_tab_widget.count() > 0:
+                self.ui.scripts_tab_widget.removeTab(0)
+            for key in list(self.script_UIs.keys()):
+                del self.script_UIs[key]
+                del self.session.flow_views[key]
+            self.session.scripts = []
             import json
             with open(file_path, 'r') as fp:
                 self.session.load(json.load(fp))
